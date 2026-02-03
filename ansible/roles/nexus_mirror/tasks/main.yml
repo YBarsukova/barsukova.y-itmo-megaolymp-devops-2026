@@ -1,0 +1,36 @@
+- name: create nexus directory
+  ansible.builtin.file:
+    path: "{{ nexusComposePath }}"
+    state: directory
+    mode: "0755"
+
+- name: copy docker compose for nexus
+  ansible.builtin.copy:
+    src: docker-compose.yml
+    dest: "{{ nexusComposePath }}/docker-compose.yml"
+    mode: "0644"
+
+- name: start nexus
+  ansible.builtin.shell:
+    cmd: "docker compose up -d"
+    chdir: "{{ nexusComposePath }}"
+
+- name: wait for nexus ui to be reachable
+  ansible.builtin.uri:
+    url: "{{ nexusUiUrl }}"
+    status_code: 200
+  register: nexusUiCheck
+  retries: 120
+  delay: 5
+  until: nexusUiCheck.status == 200
+
+- name: read initial admin password from container
+  ansible.builtin.shell: docker exec nexus cat /nexus-data/admin.password
+  register: nexusAdminPasswordRaw
+  changed_when: false
+
+- name: save admin password on host
+  ansible.builtin.copy:
+    dest: "{{ nexusAdminPasswordFile }}"
+    content: "{{ nexusAdminPasswordRaw.stdout }}\n"
+    mode: "0600"

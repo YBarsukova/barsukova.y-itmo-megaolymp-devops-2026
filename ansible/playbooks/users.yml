@@ -1,0 +1,5 @@
+- name: Users and access control
+  hosts: servers
+  become: true
+  roles:
+    - users

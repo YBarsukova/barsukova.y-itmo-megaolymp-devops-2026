@@ -1,0 +1,34 @@
+- name: create developers group
+  ansible.builtin.group:
+    name: developers
+    gid: "{{ developers_gid }}"
+    state: present
+- name: create admins group
+  ansible.builtin.group:
+    name: admins
+    gid: "{{ admins_gid }}"
+    state: present
+- name: ensure sudo installed
+  ansible.builtin.apt:
+    name: sudo
+    state: present
+    update_cache: true
+- name: allow passwordless sudo for admins
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/admins
+    content: "%admins ALL=(ALL) NOPASSWD:ALL\n"
+    mode: "0440"
+    validate: "visudo -cf %s"
+- name: create users
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: "{{ item.groups }}"
+    append: true
+    shell: /bin/bash
+    create_home: true
+  loop: "{{ users }}"
+- name: install ssh keys
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    key: "{{ item.ssh_key }}"
+  loop: "{{ users }}"

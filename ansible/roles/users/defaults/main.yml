@@ -1,0 +1,10 @@
+developers_gid: 1001
+admins_gid: 1002
+
+users:
+  - name: developer1
+    groups: [developers]
+    ssh_key: "{{lookup('file', lookup('env','HOME') + '/.ssh/developer1.pub') }}"
+  - name: admin1
+    groups: [ admins ]
+    ssh_key: "{{lookup('file', lookup('env','HOME') + '/.ssh/admin1.pub') }}"
